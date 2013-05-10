@@ -1,0 +1,11 @@
+<package>
+  <description brief="nmea_msgs">
+     nmea_msgs
+  </description>
+  <author>Mike Purvis</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/nmea_msgs</url>
+</package>
+
+

@@ -1,0 +1,16 @@
+<package>
+  <description brief="nmea_comms">
+
+     nmea_comms
+
+  </description>
+  <author>Mike Purvis</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/nmea_comms</url>
+  <depend package="nmea_msgs"/>
+  <depend package="roscpp"/>
+
+</package>
+
+

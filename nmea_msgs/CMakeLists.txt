@@ -1,18 +1,9 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(nmea_msgs)
-find_package(catkin REQUIRED COMPONENTS std_msgs message_generation)
+cmake_minimum_required(VERSION 2.4.6)
+include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
 
-add_message_files(
-    FILES
-    Sentence.msg
-    )
+rosbuild_init()
 
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-    )
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-catkin_package(
-    CATKIN_DEPENDS message_runtime
-    )
-
+rosbuild_genmsg()
