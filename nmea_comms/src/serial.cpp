@@ -4,6 +4,7 @@
 #include <poll.h>
 #include <sstream>
 #include <boost/thread.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <unistd.h>  /* UNIX standard function definitions */
 #include <fcntl.h>   /* File control definitions */
@@ -48,14 +49,11 @@ void handle_sentence(ros::Publisher& publisher, ros::Time& stamp, char* sentence
   }
 
   nmea_msgs::Sentence sentence_msg;
-  std::string first_token = strtok(sentence_body, ",");
-  sentence_msg.talker = first_token.substr(0, 2);
-  sentence_msg.sentence = first_token.substr(2);
+  boost::split(sentence_msg.fields, sentence_body, boost::is_any_of(","));
 
-  char* token;
-  while((token = strtok(NULL, ","))) {
-    sentence_msg.fields.push_back(token);
-  }
+  sentence_msg.talker = sentence_msg.fields[0].substr(0, 2);
+  sentence_msg.sentence = sentence_msg.fields[0].substr(2);
+  sentence_msg.fields.erase(sentence_msg.fields.begin());
 
   sentence_msg.header.stamp = stamp;
   publisher.publish(sentence_msg);
