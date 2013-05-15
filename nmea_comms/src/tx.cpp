@@ -12,7 +12,7 @@
 #include "checksum.h"
 
 
-void _msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd)
+void tx_msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd)
 {
   static int consecutive_errors = 0;
   std::stringstream sentence_body_ss;
@@ -59,7 +59,7 @@ void _msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd)
 }
 
 
-static ros::Subscriber subscriber;
+/*static ros::Subscriber subscriber;
 
 void tx_start(ros::NodeHandle& n, int fd)
 {
@@ -69,4 +69,4 @@ void tx_start(ros::NodeHandle& n, int fd)
 void tx_stop()
 {
   subscriber.shutdown();
-}
+}*/

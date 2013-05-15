@@ -1,5 +1,6 @@
 
 #include "rx.h"
+#include "tx.h"
 #include "checksum.h"
 
 #include <poll.h>
@@ -42,17 +43,21 @@ static void _handle_sentence(ros::Publisher& publisher, ros::Time& stamp, char* 
   publisher.publish(sentence_msg);
 }
 
+
+static int threads_active = 1;
  
 static void _thread_func(ros::NodeHandle& n, int fd)
 {
   ros::Publisher pub = n.advertise<nmea_msgs::Sentence>("rx", 5);
+  ros::Subscriber sub = n.subscribe<nmea_msgs::Sentence>("tx", 5, boost::bind(tx_msg_callback, _1, fd) ); 
+
   struct pollfd pollfds[] = { { fd, POLLIN, 0 } };
   char buffer[2048];
   char* buffer_write = buffer;
   char* buffer_end = &buffer[sizeof(buffer)];
 
-  while(ros::ok()) {
-    int retval = poll(pollfds, 1, 1000);
+  while(threads_active) {
+    int retval = poll(pollfds, 1, 500);
 
     if (retval == 0) {
       // No event, just 1 sec timeout.
@@ -60,19 +65,32 @@ static void _thread_func(ros::NodeHandle& n, int fd)
     } else if (retval < 0) {
       ROS_FATAL("Error polling device. Terminating node.");
       ros::shutdown();
-    } else if (pollfds[0].revents & (POLLHUP | POLLERR)) {
-      ROS_FATAL("Device error/hangup. Terminating node.");
-      ros::shutdown(); 
+    } else if (pollfds[0].revents & (POLLHUP | POLLERR | POLLNVAL)) {
+      ROS_INFO("Device error/hangup.");
+      ROS_INFO("Shutting down publisher and subscriber.");
+      pub.shutdown();
+      sub.shutdown();
+      ROS_INFO("Closing file descriptor.");
+      close(fd);
+      ROS_INFO("Exiting handler thread.");
+      return;
     }
 
     // Read in contents of buffer and null-terminate it.
     ros::Time now = ros::Time::now();
+    errno = 0;
     retval = read(fd, buffer_write, buffer_end - buffer_write - 1);
     if (retval > 0) {
       buffer_write += retval;
     } else {
-      ROS_WARN("Error reading from device.");
-      ros::Duration(1.0).sleep();  // just in case.
+      ROS_ERROR("Error reading from device. retval=%d, errno=%d, revents=%d", retval, errno, pollfds[0].revents);
+      ROS_INFO("Shutting down publisher and subscriber.");
+      pub.shutdown();
+      sub.shutdown();
+      ROS_INFO("Closing file descriptor.");
+      close(fd);
+      ROS_INFO("Exiting handler thread.");
+      return;
     }
     ROS_DEBUG_STREAM("Buffer size after reading from fd: " << buffer_write - buffer);
     *buffer_write = '\0';
@@ -93,18 +111,47 @@ static void _thread_func(ros::NodeHandle& n, int fd)
     memcpy(buffer, buffer_read, remainder);
     buffer_write = buffer + remainder;
   }
+  close(fd);
 }
 
 
-static boost::thread* rx_thread_ptr;
+static std::list<boost::thread*> rx_threads;
 
-void rx_start(ros::NodeHandle& n, int fd)
+int rx_prune_threads()
 {
-  rx_thread_ptr = new boost::thread(_thread_func, boost::ref(n), fd);
+  std::list<boost::thread*>::iterator thread_iter = rx_threads.begin();
+  while (thread_iter != rx_threads.end()) {
+    if ((**thread_iter).timed_join(boost::posix_time::milliseconds(10))) {
+        delete *thread_iter;
+        thread_iter = rx_threads.erase(thread_iter);
+    } else {
+        ++thread_iter;
+    }
+  } 
+  return rx_threads.size();
 }
 
-void rx_stop()
+void rx_stop_all()
 {
-  rx_thread_ptr->interrupt();
-  delete rx_thread_ptr;
+  threads_active = 0;
+  int thread_close_i = 0;
+  std::list<boost::thread*>::iterator thread_iter = rx_threads.begin();
+  while (thread_iter != rx_threads.end()) {
+    if ((**thread_iter).timed_join(boost::posix_time::milliseconds(600))) {
+      // Thread joined cleanly.
+      thread_close_i++;
+    } else {    
+      ROS_WARN("Thread required interrupt() to exit.");
+      (**thread_iter).interrupt();
+    }
+    delete *thread_iter;
+    thread_iter = rx_threads.erase(thread_iter);
+  } 
+  ROS_INFO_STREAM("Closed " << thread_close_i << " thread(s) cleanly.");
 }
+
+void rx_thread_start(ros::NodeHandle& n, int fd)
+{
+  rx_threads.push_back(new boost::thread(_thread_func, boost::ref(n), fd));
+}
+
