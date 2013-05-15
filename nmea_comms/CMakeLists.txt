@@ -6,6 +6,6 @@ rosbuild_init()
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-rosbuild_add_executable(nmea_serial_node src/serial.cpp)
+rosbuild_add_executable(nmea_serial_node src/serial_node.cpp src/rx.cpp src/tx.cpp src/checksum.cpp)
 rosbuild_link_boost(nmea_serial_node thread)
 rosbuild_add_boost_directories()

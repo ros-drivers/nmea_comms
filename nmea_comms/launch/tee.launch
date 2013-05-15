@@ -1,0 +1,11 @@
+<launch>
+  <node pkg="nmea_comms" type="nmea_serial_node" name="serial_node" ns="gps">
+    <param name="port" value="/dev/ttyUSB0" />
+  </node>
+  <node pkg="topic_tools" type="relay" name="relay" args="/gps/rx /spare/tx">
+  </node>
+  <node pkg="nmea_comms" type="nmea_serial_node" name="serial_node" ns="spare" output="screen">
+    <param name="port" value="/home/mikepurvis/service" />
+    <!-- <param name="port" value="/dev/ttyUSB1" /> -->
+  </node>
+</launch>
