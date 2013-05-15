@@ -52,11 +52,11 @@ int main(int argc, char **argv)
        
     }
 
-    //rx_start(n, new_client_fd);
+    rx_start(n, new_client_fd);
     tx_start(n, new_client_fd);
     ros::spin();
   }
-  //rx_stop(); 
+  rx_stop(); 
   tx_stop(); 
   
   close(socket_fd); 
