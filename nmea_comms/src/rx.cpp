@@ -48,8 +48,11 @@ static int threads_active = 1;
  
 static void _thread_func(ros::NodeHandle& n, int fd)
 {
+  ROS_DEBUG("New connection handler thread beginning.");
+
   ros::Publisher pub = n.advertise<nmea_msgs::Sentence>("rx", 5);
-  ros::Subscriber sub = n.subscribe<nmea_msgs::Sentence>("tx", 5, boost::bind(tx_msg_callback, _1, fd) ); 
+  ros::Subscriber sub = n.subscribe<nmea_msgs::Sentence>("tx", 5, 
+                            boost::bind(tx_msg_callback, _1, fd) ); 
 
   struct pollfd pollfds[] = { { fd, POLLIN, 0 } };
   char buffer[2048];
@@ -67,12 +70,12 @@ static void _thread_func(ros::NodeHandle& n, int fd)
       ros::shutdown();
     } else if (pollfds[0].revents & (POLLHUP | POLLERR | POLLNVAL)) {
       ROS_INFO("Device error/hangup.");
-      ROS_INFO("Shutting down publisher and subscriber.");
+      ROS_DEBUG("Shutting down publisher and subscriber.");
       pub.shutdown();
       sub.shutdown();
-      ROS_INFO("Closing file descriptor.");
+      ROS_DEBUG("Closing file descriptor.");
       close(fd);
-      ROS_INFO("Exiting handler thread.");
+      ROS_DEBUG("Exiting handler thread.");
       return;
     }
 
@@ -82,15 +85,18 @@ static void _thread_func(ros::NodeHandle& n, int fd)
     retval = read(fd, buffer_write, buffer_end - buffer_write - 1);
     if (retval > 0) {
       buffer_write += retval;
-    } else {
-      ROS_ERROR("Error reading from device. retval=%d, errno=%d, revents=%d", retval, errno, pollfds[0].revents);
-      ROS_INFO("Shutting down publisher and subscriber.");
+    } else if (retval == 0) {
+      ROS_INFO("Device stream ended.");
+      ROS_DEBUG("Shutting down publisher and subscriber.");
       pub.shutdown();
       sub.shutdown();
-      ROS_INFO("Closing file descriptor.");
+      ROS_DEBUG("Closing file descriptor.");
       close(fd);
-      ROS_INFO("Exiting handler thread.");
-      return;
+      ROS_DEBUG("Exiting handler thread.");
+      return; 
+    } else {
+      ROS_FATAL("Error reading from device. retval=%d, errno=%d, revents=%d", retval, errno, pollfds[0].revents);
+      ros::shutdown();
     }
     ROS_DEBUG_STREAM("Buffer size after reading from fd: " << buffer_write - buffer);
     *buffer_write = '\0';

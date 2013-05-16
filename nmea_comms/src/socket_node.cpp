@@ -3,6 +3,7 @@
 #include "rx.h"
 #include "tx.h"
 
+#include <poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -14,8 +15,8 @@ int main(int argc, char **argv)
   ros::NodeHandle n_local("~");
   ros::NodeHandle n;
 
-  int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (socket_fd < 0) 
+  int listener_fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (listener_fd < 0) 
   {
     ROS_FATAL("ERROR opening socket");
     ros::shutdown();
@@ -32,33 +33,49 @@ int main(int argc, char **argv)
   serv_addr.sin_port = htons(port);
  
   /* Now bind the host address using bind() call.*/
-  if (bind(socket_fd, (struct sockaddr *) &serv_addr,
-                      sizeof(serv_addr)) < 0) {
-    ROS_FATAL("ERROR binding socket. Is port %d in use?", port);
-    ros::shutdown();
+  int previous_success = 1; 
+  while(1) {
+    if (bind(listener_fd, (struct sockaddr *) &serv_addr,
+                        sizeof(serv_addr)) < 0) {
+      if (previous_success) {
+        ROS_ERROR("Unable to bind socket. Is port %d in use? Retrying every 1s.", port);
+        previous_success = 0;
+      }
+      ros::Duration(1.0).sleep();
+    } else {
+      break;
+    }
   }
 
-  /* Now start listening for the clients, here 
-   * process will go in sleep mode and will wait 
-   * for the incoming connection
-   */
-  listen(socket_fd,5);
-  int new_client_fd = -1;
+  // Start ROS spinning in the background.
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
+  // Now start listening for the clients, here 
+  // process will go in sleep mode and will wait 
+  // for the incoming connection
+  listen(listener_fd, 5);
+
   unsigned int clilen = sizeof(cli_addr);
+
+  ROS_INFO("Now listening for connections on port %d.", port);
+  struct pollfd pollfds[] = { { listener_fd, POLLIN, 0 } };
   while (ros::ok()) 
   {
-    new_client_fd = accept(socket_fd, (struct sockaddr *) &cli_addr, &clilen);
-    if (new_client_fd < 0) {
-       
+    int retval = poll(pollfds, 1, 500);
+    if (retval > 0) {
+      int new_client_fd = accept(listener_fd, (struct sockaddr *) &cli_addr, &clilen);
+      if (new_client_fd < 0) {
+        // Error of some kind? 
+      } else {
+        rx_thread_start(n, new_client_fd); 
+      }
+    } else {
+      // just in case
+      ros::Duration(0.2).sleep();
     }
-
-    rx_start(n, new_client_fd);
-    tx_start(n, new_client_fd);
-    ros::spin();
   }
-  rx_stop(); 
-  tx_stop(); 
-  
-  close(socket_fd); 
+
+  close(listener_fd); 
   return 0;
 }

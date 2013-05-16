@@ -83,7 +83,6 @@ int main(int argc, char **argv)
   ros::Timer timer = n.createTimer(ros::Duration(1.0),
       boost::bind(manage_connection, _1, n, port, baud)); 
   ros::spin();
-  ROS_INFO("yo!");
 
   rx_stop_all();
 

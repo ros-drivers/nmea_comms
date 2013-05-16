@@ -57,16 +57,3 @@ void tx_msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd)
     }
   }
 }
-
-
-/*static ros::Subscriber subscriber;
-
-void tx_start(ros::NodeHandle& n, int fd)
-{
-  subscriber = n.subscribe<nmea_msgs::Sentence>("tx", 5, boost::bind(_msg_callback, _1, fd) ); 
-}
-
-void tx_stop()
-{
-  subscriber.shutdown();
-}*/
