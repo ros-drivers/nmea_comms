@@ -14,6 +14,7 @@
 
 static void _handle_sentence(ros::Publisher& publisher, ros::Time& stamp, char* sentence)
 {
+  ROS_DEBUG("Sentence RX: %s", sentence);
   char* sentence_body = strtok(sentence, "*");
   char* sentence_checksum = strtok(NULL, "*");
   if (sentence_checksum == NULL) {
@@ -61,6 +62,7 @@ static void _thread_func(ros::NodeHandle& n, int fd)
 
   while(threads_active) {
     int retval = poll(pollfds, 1, 500);
+    ROS_DEBUG("Poll retval=%d, errno=%d, revents=%d", retval, errno, pollfds[0].revents);
 
     if (retval == 0) {
       // No event, just 1 sec timeout.
@@ -83,6 +85,7 @@ static void _thread_func(ros::NodeHandle& n, int fd)
     ros::Time now = ros::Time::now();
     errno = 0;
     retval = read(fd, buffer_write, buffer_end - buffer_write - 1);
+    ROS_DEBUG("Read retval=%d, errno=%d", retval, errno);
     if (retval > 0) {
       buffer_write += retval;
     } else if (retval == 0) {
