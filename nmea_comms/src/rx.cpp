@@ -15,31 +15,9 @@
 static void _handle_sentence(ros::Publisher& publisher, ros::Time& stamp, char* sentence)
 {
   ROS_DEBUG("Sentence RX: %s", sentence);
-  char* sentence_body = strtok(sentence, "*");
-  char* sentence_checksum = strtok(NULL, "*");
-  if (sentence_checksum == NULL) {
-    ROS_DEBUG("No checksum marker (*), discarding sentence.");
-    return;   
-  }
-  if (strlen(sentence_checksum) != 2) {
-    ROS_DEBUG("Checksum wrong length, discarding sentence.");
-    return;
-  }
-
-  char computed_checksum[2];
-  compute_checksum(sentence, computed_checksum);
-  if (memcmp(computed_checksum, sentence_checksum, 2) != 0) {
-    ROS_DEBUG("Bad checksum, discarding sentence.");
-    return;
-  }
-
-  nmea_msgs::Sentence sentence_msg;
-  boost::split(sentence_msg.fields, sentence_body, boost::is_any_of(","));
-
-  sentence_msg.talker = sentence_msg.fields[0].substr(0, 2);
-  sentence_msg.sentence = sentence_msg.fields[0].substr(2);
-  sentence_msg.fields.erase(sentence_msg.fields.begin());
-
+ 
+  static nmea_msgs::Sentence sentence_msg;
+  sentence_msg.sentence = sentence;
   sentence_msg.header.stamp = stamp;
   publisher.publish(sentence_msg);
 }
@@ -111,7 +89,7 @@ static void _thread_func(ros::NodeHandle& n, int fd)
       char* sentence_end = strchr(sentence, '\r');
       if (sentence_end == NULL) break;
       *sentence_end = '\0';
-      _handle_sentence(pub, now, sentence + 1);
+      _handle_sentence(pub, now, sentence);
       buffer_read = sentence_end + 1; 
     }
 

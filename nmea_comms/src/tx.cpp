@@ -15,21 +15,14 @@
 void tx_msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd)
 {
   static int consecutive_errors = 0;
-  std::stringstream sentence_body_ss;
-  sentence_body_ss << sentence_msg_ptr->talker << sentence_msg_ptr->sentence << "," <<
-      boost::join(sentence_msg_ptr->fields, ",");
-  std::string sentence_body = sentence_body_ss.str();
-
-  char checksum[2];
-  compute_checksum(sentence_body.c_str(), checksum); 
 
   char buffer[256];
-  int buffer_length = snprintf(buffer, 256, "$%s*%s\r\n", sentence_body.c_str(), checksum);
+  int buffer_length = snprintf(buffer, 256, "%s\r\n", sentence_msg_ptr->sentence.c_str());
 
   // No guarantee that write() will write everything, so we use poll() to block
   // on the availability of the fd for writing until the whole message has been
   // written out.
-  char* buffer_write = buffer;
+  const char* buffer_write = buffer;
   struct pollfd pollfds[] = { { fd, POLLOUT, 0 } };
   while(ros::ok()) {
     int retval = poll(pollfds, 1, 1000);
@@ -43,8 +36,8 @@ void tx_msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd)
     if (retval > 0) {
       buffer_write += retval;
     } else {
-      ROS_WARN("Device write error; abandoning message (%s%s).", 
-               sentence_msg_ptr->talker.c_str(), sentence_msg_ptr->sentence.c_str());
+      ROS_WARN("Device write error; abandoning message (%s).", 
+               sentence_msg_ptr->sentence.c_str());
       if (++consecutive_errors >= 10) {
         ROS_FATAL("Killing node due to %d consecutive write errors.", consecutive_errors);
         ros::shutdown();
