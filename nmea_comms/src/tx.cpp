@@ -27,8 +27,13 @@ void tx_msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd)
   while(ros::ok()) {
     int retval = poll(pollfds, 1, 1000);
 
-    if (pollfds[0].revents & (POLLHUP | POLLERR)) {
+    if (pollfds[0].revents & POLLHUP) {
       ROS_FATAL("Killing node due to device hangup.");
+      ros::shutdown();
+    }
+
+    if (pollfds[0].revents & POLLERR) {
+      ROS_FATAL("Killing node due to device error.");
       ros::shutdown();
     }
 
