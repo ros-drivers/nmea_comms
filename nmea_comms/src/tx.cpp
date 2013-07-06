@@ -28,8 +28,9 @@ void tx_msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd)
     int retval = poll(pollfds, 1, 1000);
 
     if (pollfds[0].revents & POLLHUP) {
-      ROS_FATAL("Killing node due to device hangup.");
-      ros::shutdown();
+      ROS_INFO("Device hangup occurred on attempted write.");
+      return;
+      //ros::shutdown();
     }
 
     if (pollfds[0].revents & POLLERR) {
