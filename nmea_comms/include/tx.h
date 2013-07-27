@@ -1,15 +1,8 @@
 
-//#include "ros/ros.h"
-#include "nmea_msgs/Sentence.h"
+#include "ros/ros.h"
 
-//namespace ros {
-//  class NodeHandle;
-//};
-//namespace nmea_msgs {
-//  class SentenceConstPtr;
-//}
-
-/*void tx_start(ros::NodeHandle& n, int fd);
-void tx_stop();*/
+namespace nmea_msgs {
+ROS_DECLARE_MESSAGE(Sentence);
+}
 
 void tx_msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd);

@@ -1,4 +1,5 @@
 #include "ros/ros.h"
+#include "nmea_msgs/Sentence.h"
 
 #include "rx.h"
 #include "tx.h"
@@ -7,6 +8,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+
+void msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr) {
+  // noop
+}
 
 
 int main(int argc, char **argv)
@@ -50,6 +55,14 @@ int main(int argc, char **argv)
   // Start ROS spinning in the background.
   ros::AsyncSpinner spinner(1);
   spinner.start();
+
+  // Dummy publisher and subscriber.
+  // These are here because rospy has some bugs related to setting up
+  // and tearing down the same connection repeatly. So having these topics
+  // persistently available avoids issues with external Python-based nodes.
+  // See: https://github.com/ros/ros_comm/issues/129
+  ros::Publisher dummy_pub = n.advertise<nmea_msgs::Sentence>("rx", 5);
+  ros::Subscriber dummy_sub = n.subscribe<nmea_msgs::Sentence>("tx", 5, msg_callback ); 
 
   // Now start listening for the clients, here 
   // process will go in sleep mode and will wait 
