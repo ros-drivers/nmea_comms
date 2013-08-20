@@ -1,4 +1,4 @@
-#include "checksum.h"
+#include "nmea_comms/checksum.h"
 #include <stdio.h>
 
 void compute_checksum(const char* sentence_body, char checksum_out[2])

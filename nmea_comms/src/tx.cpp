@@ -1,6 +1,6 @@
 
-#include "rx.h"
-#include "checksum.h"
+#include "nmea_comms/rx.h"
+#include "nmea_comms/checksum.h"
 
 #include <stdio.h>
 #include <poll.h>
@@ -8,8 +8,6 @@
 
 #include "ros/ros.h"
 #include "nmea_msgs/Sentence.h"
-
-#include "checksum.h"
 
 
 void tx_msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd)

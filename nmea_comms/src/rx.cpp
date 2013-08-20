@@ -1,7 +1,7 @@
 
-#include "rx.h"
-#include "tx.h"
-#include "checksum.h"
+#include "nmea_comms/rx.h"
+#include "nmea_comms/tx.h"
+#include "nmea_comms/checksum.h"
 
 #include <poll.h>
 #include <sstream>

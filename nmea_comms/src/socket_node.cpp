@@ -1,8 +1,8 @@
 #include "ros/ros.h"
 #include "nmea_msgs/Sentence.h"
 
-#include "rx.h"
-#include "tx.h"
+#include "nmea_comms/rx.h"
+#include "nmea_comms/tx.h"
 
 #include <poll.h>
 #include <sys/socket.h>

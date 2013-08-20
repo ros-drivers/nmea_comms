@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <termios.h>
 
-#include "rx.h"
+#include "nmea_comms/rx.h"
 
 
 void manage_connection(const ros::TimerEvent& event, ros::NodeHandle& n, std::string port, int32_t baud)
