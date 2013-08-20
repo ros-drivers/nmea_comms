@@ -1,15 +1,41 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8.3)
+project(nmea_comms)
 
-rosbuild_init()
+find_package(catkin REQUIRED COMPONENTS roscpp nmea_msgs)
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+catkin_package(
+   INCLUDE_DIRS include
+)
 
-rosbuild_add_executable(nmea_serial_node src/serial_node.cpp src/rx.cpp src/tx.cpp src/checksum.cpp)
-rosbuild_link_boost(nmea_serial_node thread)
+###########
+## Build ##
+###########
 
-rosbuild_add_executable(nmea_socket_node src/socket_node.cpp src/rx.cpp src/tx.cpp src/checksum.cpp)
-rosbuild_link_boost(nmea_socket_node thread)
+include_directories(include ${catkin_INCLUDE_DIRS})
 
-rosbuild_add_boost_directories()
+set(${PROJECT_NAME}_SRCS src/rx.cpp src/tx.cpp src/checksum.cpp)
+
+add_executable(nmea_serial_node src/serial_node.cpp ${${PROJECT_NAME}_SRCS})
+add_dependencies(nmea_serial_node nmea_msgs_gencpp)
+target_link_libraries(nmea_serial_node ${catkin_LIBRARIES})
+
+add_executable(nmea_socket_node src/socket_node.cpp ${${PROJECT_NAME}_SRCS})
+add_dependencies(nmea_socket_node nmea_msgs_gencpp)
+target_link_libraries(nmea_socket_node ${catkin_LIBRARIES})
+
+##########
+## Docs ##
+##########
+
+add_custom_target (${PROJECT_NAME}_doc 
+  rosdoc_lite -o ${CATKIN_DEVEL_PREFIX}/doc/${PROJECT_NAME} ${CATKIN_DEVEL_PREFIX}/../src/nmea/${PROJECT_NAME}
+)
+
+FILE(GLOB LINT_SRCS src/*.cpp include/${PROJECT_NAME}/*.h)
+add_custom_target(${PROJECT_NAME}_cpplint
+  COMMAND cpplint --filter=-whitespace/line_length ${LINT_SRCS})
+
+#############
+## Testing ##
+#############
+
