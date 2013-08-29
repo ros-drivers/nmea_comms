@@ -25,6 +25,18 @@ set_target_properties(nmea_socket_node PROPERTIES OUTPUT_NAME socket_node PREFIX
 add_dependencies(nmea_socket_node nmea_msgs_gencpp)
 target_link_libraries(nmea_socket_node ${catkin_LIBRARIES})
 
+#############
+## Install ##
+#############
+
+install(TARGETS nmea_serial_node nmea_socket_node
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 ##########
 ## Docs ##
 ##########
