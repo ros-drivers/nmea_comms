@@ -1,9 +1,9 @@
 <launch>
-  <node pkg="nmea_comms" type="nmea_serial_node" name="serial_node" ns="gps" output="screen">
+  <node pkg="nmea_comms" type="serial_node" name="nmea_serial" ns="gps" output="screen">
     <param name="port" value="/dev/ttyACM0" />
   </node>
   <node pkg="topic_tools" type="relay" name="relay" args="/gps/rx /spare/tx">
   </node>
-  <node pkg="nmea_comms" type="nmea_socket_node" name="socket_node" ns="spare" output="screen">
+  <node pkg="nmea_comms" type="socket_node" name="nmea_socket" ns="spare" output="screen">
   </node>
 </launch>
