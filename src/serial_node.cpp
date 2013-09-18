@@ -7,7 +7,7 @@
 #include "nmea_comms/rx.h"
 
 
-void manage_connection(const ros::TimerEvent& event, ros::NodeHandle& n, std::string port, int32_t baud)
+void manage_connection(const ros::TimerEvent& event, ros::NodeHandle& n, std::string port, int32_t baud, std::string frame_id)
 {
   if (rx_prune_threads() > 0) {
     // Serial thread already active. Nothing to do here.
@@ -52,7 +52,7 @@ void manage_connection(const ros::TimerEvent& event, ros::NodeHandle& n, std::st
     // Successful connection setup; kick off servicing thread.
     ROS_INFO_STREAM("Successfully connected on " << port << "."); 
     previous_success = 1;
-    rx_thread_start(n, serial_fd); 
+    rx_thread_start(n, serial_fd, frame_id); 
     break;
 
   close_serial:
@@ -80,8 +80,11 @@ int main(int argc, char **argv)
   n_local.param<std::string>("port", port, "/dev/ttyUSB0");
   n_local.param("baud", baud, 115200);
 
+  std::string frame_id;
+  n_local.param<std::string>("frame_id", frame_id, "navsat");
+
   ros::Timer timer = n.createTimer(ros::Duration(1.0),
-      boost::bind(manage_connection, _1, n, port, baud)); 
+      boost::bind(manage_connection, _1, n, port, baud, frame_id)); 
   ros::spin();
 
   rx_stop_all();

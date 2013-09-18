@@ -12,20 +12,21 @@
 #include "nmea_msgs/Sentence.h"
 
 
-static void _handle_sentence(ros::Publisher& publisher, ros::Time& stamp, char* sentence)
+static void _handle_sentence(ros::Publisher& publisher, ros::Time& stamp, const char* sentence, const char* frame_id)
 {
   ROS_DEBUG("Sentence RX: %s", sentence);
  
   static nmea_msgs::Sentence sentence_msg;
   sentence_msg.sentence = sentence;
   sentence_msg.header.stamp = stamp;
+  sentence_msg.header.frame_id = frame_id;
   publisher.publish(sentence_msg);
 }
 
 
 static int threads_active = 1;
  
-static void _thread_func(ros::NodeHandle& n, int fd)
+static void _thread_func(ros::NodeHandle& n, int fd, std::string frame_id)
 {
   ROS_DEBUG("New connection handler thread beginning.");
 
@@ -89,7 +90,7 @@ static void _thread_func(ros::NodeHandle& n, int fd)
       char* sentence_end = strchr(sentence, '\r');
       if (sentence_end == NULL) break;
       *sentence_end = '\0';
-      _handle_sentence(pub, now, sentence);
+      _handle_sentence(pub, now, sentence, frame_id.c_str());
       buffer_read = sentence_end + 1; 
     }
 
@@ -137,8 +138,8 @@ void rx_stop_all()
   ROS_INFO_STREAM("Closed " << thread_close_i << " thread(s) cleanly.");
 }
 
-void rx_thread_start(ros::NodeHandle& n, int fd)
+void rx_thread_start(ros::NodeHandle& n, int fd, std::string frame_id)
 {
-  rx_threads.push_back(new boost::thread(_thread_func, boost::ref(n), fd));
+  rx_threads.push_back(new boost::thread(_thread_func, boost::ref(n), fd, frame_id));
 }
 

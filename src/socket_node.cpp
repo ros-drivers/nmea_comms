@@ -29,6 +29,9 @@ int main(int argc, char **argv)
 
   int port;
   n_local.param("port", port, 29500);
+
+  std::string frame_id;
+  n_local.param<std::string>("frame_id", frame_id, "navsat");
  
   /* Initialize socket structure */
   struct sockaddr_in serv_addr, cli_addr;
@@ -81,7 +84,7 @@ int main(int argc, char **argv)
       if (new_client_fd < 0) {
         // Error of some kind? 
       } else {
-        rx_thread_start(n, new_client_fd); 
+        rx_thread_start(n, new_client_fd, frame_id); 
       }
     } else {
       // just in case
