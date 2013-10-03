@@ -40,6 +40,7 @@ static void _thread_func(ros::NodeHandle& n, int fd, std::string frame_id)
   char* buffer_end = &buffer[sizeof(buffer)];
 
   while(threads_active) {
+    errno = 0;
     int retval = poll(pollfds, 1, 500);
     ROS_DEBUG("Poll retval=%d, errno=%d, revents=%d", retval, errno, pollfds[0].revents);
 
@@ -65,7 +66,13 @@ static void _thread_func(ros::NodeHandle& n, int fd, std::string frame_id)
     errno = 0;
     retval = read(fd, buffer_write, buffer_end - buffer_write - 1);
     ROS_DEBUG("Read retval=%d, errno=%d", retval, errno);
+    ROS_DEBUG_COND(retval < 0, "Read error: %s", strerror(errno));
     if (retval > 0) {
+      if (strnlen(buffer_write, retval) != retval) {
+        ROS_WARN("Null byte received from serial port, flushing buffer.");
+        buffer_write = buffer;
+        continue;
+      }
       buffer_write += retval;
     } else if (retval == 0) {
       ROS_INFO("Device stream ended.");
@@ -77,8 +84,14 @@ static void _thread_func(ros::NodeHandle& n, int fd, std::string frame_id)
       ROS_DEBUG("Exiting handler thread.");
       return; 
     } else {
-      ROS_FATAL("Error reading from device. retval=%d, errno=%d, revents=%d", retval, errno, pollfds[0].revents);
-      ros::shutdown();
+      // retval < 0, indicating an error of some kind.
+      if (errno == EAGAIN) {
+        // Can't read from the device, try again.
+        continue;
+      } else {
+        ROS_FATAL("Error reading from device. retval=%d, errno=%d, revents=%d", retval, errno, pollfds[0].revents);
+        ros::shutdown();
+      }
     }
     ROS_DEBUG_STREAM("Buffer size after reading from fd: " << buffer_write - buffer);
     *buffer_write = '\0';
@@ -95,8 +108,12 @@ static void _thread_func(ros::NodeHandle& n, int fd, std::string frame_id)
     }
 
     int remainder = buffer_write - buffer_read;
+    if (remainder > 2000) {
+      ROS_WARN("Buffer size >2000 bytes, resetting buffer.");
+      remainder = 0;
+    }
     ROS_DEBUG_STREAM("Remainder in buffer is: " << remainder);
-    memcpy(buffer, buffer_read, remainder);
+    memmove(buffer, buffer_read, remainder);
     buffer_write = buffer + remainder;
   }
   close(fd);
