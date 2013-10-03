@@ -63,7 +63,7 @@ void manage_connection(const ros::TimerEvent& event, ros::NodeHandle& n, std::st
     // Successful connection setup; kick off servicing thread.
     ROS_INFO_STREAM("Successfully connected on " << port << "."); 
     previous_success = 1;
-    rx_thread_start(n, serial_fd, frame_id); 
+    rx_thread_start(n, serial_fd, frame_id, 1000000000 / baud * 10); 
     break;
 
   close_serial:

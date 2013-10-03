@@ -5,12 +5,15 @@
 
 #include <poll.h>
 #include <sstream>
+#include <sys/ioctl.h>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include "ros/ros.h"
 #include "nmea_msgs/Sentence.h"
 
+#define RX_INITIAL_LENGTH 40
+#define RX_SUCCESSIVE_LENGTH 8
 
 static void _handle_sentence(ros::Publisher& publisher, ros::Time& stamp, const char* sentence, const char* frame_id)
 {
@@ -26,7 +29,7 @@ static void _handle_sentence(ros::Publisher& publisher, ros::Time& stamp, const 
 
 static int threads_active = 1;
  
-static void _thread_func(ros::NodeHandle& n, int fd, std::string frame_id)
+static void _thread_func(ros::NodeHandle& n, int fd, std::string frame_id, uint32_t byte_time_ns=0)
 {
   ROS_DEBUG("New connection handler thread beginning.");
 
@@ -59,6 +62,26 @@ static void _thread_func(ros::NodeHandle& n, int fd, std::string frame_id)
       close(fd);
       ROS_DEBUG("Exiting handler thread.");
       return;
+    }
+    
+    // We can save some CPU by sleeping if the number waiting bytes is really small
+    if (byte_time_ns > 0) {
+      int waiting_bytes;
+      errno = ioctl(fd, FIONREAD, &waiting_bytes);
+      if (errno == 0) {
+        int wait_for = 0;
+        int buffer_plus_waiting = (buffer_write - buffer) + waiting_bytes;
+        if (buffer_plus_waiting < RX_INITIAL_LENGTH) {
+          wait_for = RX_INITIAL_LENGTH - buffer_plus_waiting;
+        } else if (waiting_bytes < RX_SUCCESSIVE_LENGTH) {
+          wait_for = RX_SUCCESSIVE_LENGTH - waiting_bytes;
+        }
+        if (wait_for > 0) {
+          struct timespec req = { 0, wait_for * byte_time_ns }, rem;
+          ROS_DEBUG_STREAM("Sleeping for " << wait_for << " bytes (" << byte_time_ns << " ns)");
+          nanosleep(&req, &rem);
+        }
+      }
     }
 
     // Read in contents of buffer and null-terminate it.
@@ -155,8 +178,8 @@ void rx_stop_all()
   ROS_INFO_STREAM("Closed " << thread_close_i << " thread(s) cleanly.");
 }
 
-void rx_thread_start(ros::NodeHandle& n, int fd, std::string frame_id)
+void rx_thread_start(ros::NodeHandle& n, int fd, std::string frame_id, uint32_t byte_time_ns)
 {
-  rx_threads.push_back(new boost::thread(_thread_func, boost::ref(n), fd, frame_id));
+  rx_threads.push_back(new boost::thread(_thread_func, boost::ref(n), fd, frame_id, byte_time_ns));
 }
 
