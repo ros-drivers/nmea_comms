@@ -37,14 +37,6 @@ install(DIRECTORY launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-##########
-## Docs ##
-##########
-
-add_custom_target (${PROJECT_NAME}_doc 
-  rosdoc_lite -o ${CATKIN_DEVEL_PREFIX}/doc/${PROJECT_NAME} ${CATKIN_DEVEL_PREFIX}/../src/nmea/${PROJECT_NAME}
-)
-
 #############
 ## Testing ##
 #############
