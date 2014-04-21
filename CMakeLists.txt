@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(nmea_comms)
 
-find_package(catkin REQUIRED COMPONENTS roscpp nmea_msgs rostest)
+find_package(catkin REQUIRED COMPONENTS roscpp roslaunch nmea_msgs rostest)
 
 catkin_package(
    INCLUDE_DIRS include
@@ -47,4 +47,7 @@ if (CATKIN_ENABLE_TESTING)
   add_rostest_gtest(nmea_socket_node_test test/socket_node.test test/test_socket_node.cpp)
   target_link_libraries(nmea_socket_node_test ${catkin_LIBRARIES})
   add_dependencies(nmea_socket_node_test nmea_socket_node nmea_msgs_gencpp)
+
+  roslaunch_add_file_check(launch/tee.launch
+    DEPENDENCIES nmea_socket_node nmea_serial_node)
 endif()
