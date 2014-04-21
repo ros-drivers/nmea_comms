@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(nmea_comms)
 
-find_package(catkin REQUIRED COMPONENTS roscpp nmea_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp nmea_msgs rostest)
 
 catkin_package(
    INCLUDE_DIRS include
@@ -49,6 +49,7 @@ add_custom_target (${PROJECT_NAME}_doc
 ## Testing ##
 #############
 
-FILE(GLOB LINT_SRCS src/*.cpp include/${PROJECT_NAME}/*.h)
-add_custom_target(${PROJECT_NAME}_cpplint
-  COMMAND cpplint --filter=-whitespace/line_length ${LINT_SRCS})
+if (CATKIN_ENABLE_TESTING)
+  add_rostest_gtest(nmea_socket_node_test test/socket_node.test test/test_socket_node.cpp)
+  target_link_libraries(nmea_socket_node_test ${catkin_LIBRARIES})
+endif()
