@@ -2,6 +2,13 @@
 Changelog for package nmea_comms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2014-04-21)
+------------------
+* Add roslint, automatic style fixes.
+* Add license headers to source files.
+* Tidy up package.xml, add author and url elements.
+* Contributors: Mike Purvis
+
 1.0.0 (2014-04-21)
 ------------------
 * Update the tee example launch file.
