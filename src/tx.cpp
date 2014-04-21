@@ -9,7 +9,7 @@ Redistribution and use in source and binary forms, with or without modification,
 the following conditions are met:
  * Redistributions of source code must retain the above copyright notice, this list of conditions and the
    following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
+ * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
    following disclaimer in the documentation and/or other materials provided with the distribution.
  * Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or promote
    products derived from this software without specific prior written permission.
@@ -46,33 +46,41 @@ void tx_msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr, int fd)
   // written out.
   const char* buffer_write = buffer;
   struct pollfd pollfds[] = { { fd, POLLOUT, 0 } };
-  while(ros::ok()) {
+  while (ros::ok())
+  {
     int retval = poll(pollfds, 1, 1000);
 
-    if (pollfds[0].revents & POLLHUP) {
+    if (pollfds[0].revents & POLLHUP)
+    {
       ROS_INFO("Device hangup occurred on attempted write.");
       return;
       //ros::shutdown();
     }
 
-    if (pollfds[0].revents & POLLERR) {
+    if (pollfds[0].revents & POLLERR)
+    {
       ROS_FATAL("Killing node due to device error.");
       ros::shutdown();
     }
 
     retval = write(fd, buffer_write, buffer_length - (buffer_write - buffer));
-    if (retval > 0) {
+    if (retval > 0)
+    {
       buffer_write += retval;
-    } else {
-      ROS_WARN("Device write error; abandoning message (%s).", 
+    }
+    else
+    {
+      ROS_WARN("Device write error; abandoning message (%s).",
                sentence_msg_ptr->sentence.c_str());
-      if (++consecutive_errors >= 10) {
+      if (++consecutive_errors >= 10)
+      {
         ROS_FATAL("Killing node due to %d consecutive write errors.", consecutive_errors);
         ros::shutdown();
       }
       break;
     }
-    if (buffer_write - buffer >= buffer_length) {
+    if (buffer_write - buffer >= buffer_length)
+    {
       consecutive_errors = 0;
       break;
     }

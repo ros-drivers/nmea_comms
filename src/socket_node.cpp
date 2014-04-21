@@ -9,7 +9,7 @@ Redistribution and use in source and binary forms, with or without modification,
 the following conditions are met:
  * Redistributions of source code must retain the above copyright notice, this list of conditions and the
    following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the 
+ * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
    following disclaimer in the documentation and/or other materials provided with the distribution.
  * Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or promote
    products derived from this software without specific prior written permission.
@@ -34,7 +34,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 #include <netinet/in.h>
 
 
-void msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr) {
+void msg_callback(const nmea_msgs::SentenceConstPtr sentence_msg_ptr)
+{
   // noop
 }
 
@@ -46,7 +47,7 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   int listener_fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (listener_fd < 0) 
+  if (listener_fd < 0)
   {
     ROS_FATAL("ERROR opening socket");
     ros::shutdown();
@@ -57,25 +58,30 @@ int main(int argc, char **argv)
 
   std::string frame_id;
   n_local.param<std::string>("frame_id", frame_id, "navsat");
- 
+
   /* Initialize socket structure */
   struct sockaddr_in serv_addr, cli_addr;
   bzero((char *) &serv_addr, sizeof(serv_addr));
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_addr.s_addr = INADDR_ANY;
   serv_addr.sin_port = htons(port);
- 
+
   /* Now bind the host address using bind() call.*/
-  int previous_success = 1; 
-  while(1) {
+  int previous_success = 1;
+  while (1)
+  {
     if (bind(listener_fd, (struct sockaddr *) &serv_addr,
-                        sizeof(serv_addr)) < 0) {
-      if (previous_success) {
+             sizeof(serv_addr)) < 0)
+    {
+      if (previous_success)
+      {
         ROS_ERROR("Unable to bind socket. Is port %d in use? Retrying every 1s.", port);
         previous_success = 0;
       }
       ros::Duration(1.0).sleep();
-    } else {
+    }
+    else
+    {
       break;
     }
   }
@@ -90,10 +96,10 @@ int main(int argc, char **argv)
   // persistently available avoids issues with external Python-based nodes.
   // See: https://github.com/ros/ros_comm/issues/129
   ros::Publisher dummy_pub = n.advertise<nmea_msgs::Sentence>("nmea_sentence", 5);
-  ros::Subscriber dummy_sub = n.subscribe<nmea_msgs::Sentence>("nmea_sentence_out", 5, msg_callback ); 
+  ros::Subscriber dummy_sub = n.subscribe<nmea_msgs::Sentence>("nmea_sentence_out", 5, msg_callback);
 
-  // Now start listening for the clients, here 
-  // process will go in sleep mode and will wait 
+  // Now start listening for the clients, here
+  // process will go in sleep mode and will wait
   // for the incoming connection
   listen(listener_fd, 5);
 
@@ -101,22 +107,28 @@ int main(int argc, char **argv)
 
   ROS_INFO("Now listening for connections on port %d.", port);
   struct pollfd pollfds[] = { { listener_fd, POLLIN, 0 } };
-  while (ros::ok()) 
+  while (ros::ok())
   {
     int retval = poll(pollfds, 1, 500);
-    if (retval > 0) {
+    if (retval > 0)
+    {
       int new_client_fd = accept(listener_fd, (struct sockaddr *) &cli_addr, &clilen);
-      if (new_client_fd < 0) {
-        // Error of some kind? 
-      } else {
-        rx_thread_start(n, new_client_fd, frame_id); 
+      if (new_client_fd < 0)
+      {
+        // Error of some kind?
       }
-    } else {
+      else
+      {
+        rx_thread_start(n, new_client_fd, frame_id);
+      }
+    }
+    else
+    {
       // just in case
       ros::Duration(0.2).sleep();
     }
   }
 
-  close(listener_fd); 
+  close(listener_fd);
   return 0;
 }
