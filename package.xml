@@ -18,6 +18,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
+  <build_depend>roslint</build_depend>
   <build_depend>nmea_msgs</build_depend>
   <build_depend>roslaunch</build_depend>
   <build_depend>rostest</build_depend>

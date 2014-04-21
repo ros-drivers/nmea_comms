@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(nmea_comms)
 
-find_package(catkin REQUIRED COMPONENTS roscpp roslaunch nmea_msgs rostest)
+find_package(catkin REQUIRED COMPONENTS roscpp roslaunch roslint nmea_msgs rostest)
 
 catkin_package(
    INCLUDE_DIRS include
@@ -50,4 +50,6 @@ if (CATKIN_ENABLE_TESTING)
 
   roslaunch_add_file_check(launch/tee.launch
     DEPENDENCIES nmea_socket_node nmea_serial_node)
+
+  roslint_cpp()
 endif()
