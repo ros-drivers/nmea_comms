@@ -39,5 +39,7 @@ add_custom_target(${PROJECT_NAME}_cpplint
 ## Testing ##
 #############
 
-add_rostest_gtest(nmea_socket_node_test test/socket_node.test test/test_socket_node.cpp)
-target_link_libraries(nmea_socket_node_test ${catkin_LIBRARIES})
+if (CATKIN_ENABLE_TESTING)
+  add_rostest_gtest(nmea_socket_node_test test/socket_node.test test/test_socket_node.cpp)
+  target_link_libraries(nmea_socket_node_test ${catkin_LIBRARIES})
+endif()

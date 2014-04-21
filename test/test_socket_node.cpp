@@ -53,6 +53,7 @@ class NMEASocketTest : public testing::Test
     }
 
     void _rx_callback(const nmea_msgs::SentenceConstPtr& msg) {
+      ROS_INFO_STREAM("Received: [" << msg->sentence << "]");
       total_received++;
       last_received = msg;
     }
@@ -84,33 +85,35 @@ TEST_F(NMEASocketTest, basic_rx_test)
 
 TEST_F(NMEASocketTest, multi_rx_test)
 {
-  const int num_devs = 1;
-  const int msgs_per_dev = 1;
+  const int num_devs = 5;
+  const int msgs_per_dev = 10;
   int devs[num_devs], i;
 
   for (i = 0; i < num_devs; i++) {
-    connect(&(devs[i]));
+    connect(&devs[i]);
   }
 
   // Time for publishers and subscribers to link up.
   ros::Duration(2.0).sleep();
 
-  printf("yoooooooooooooooooooooooo!");
   for (int m = 0; m < msgs_per_dev; m++) {
     for (i = 0; i < num_devs; i++) {
       char buffer[40];
       int len = sprintf(buffer, "$MSG,blah,%d,%d*00%s", i, m, "\r\n");
-      printf("aaa%d%sbbbx\r\n", len, buffer);
+      ROS_INFO("Sending msg #%d on dev #%d: [%s]", m, i, buffer);
       EXPECT_EQ(len, write(devs[i], buffer, len));
-    }
-    // Allow ROS node to do its thing.
-    ros::spinOnce();
-  }
-  EXPECT_EQ(num_devs * msgs_per_dev, total_received);
 
-  // Time for messages to arrive.
-  ros::Duration(2.0).sleep();
+      // TODO: Understand better why this sleep and spin are necessary here; seems like they shouldn't be.
+      ros::Duration(0.01).sleep();
+      ros::spinOnce();
+    }
+  }
+
+  // Time for final messages to arrive.
+  ros::Duration(0.1).sleep();
   ros::spinOnce();
+
+  EXPECT_EQ(num_devs * msgs_per_dev, total_received);
 
   for (i = 0; i < num_devs; i++) {
     disconnect(&(devs[i]));
