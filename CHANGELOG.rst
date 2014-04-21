@@ -2,6 +2,14 @@
 Changelog for package nmea_comms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.0 (2014-04-21)
+------------------
+* Update the tee example launch file.
+* Change topic names to match the default in nmea_navsat_driver.
+* Put the common sources in a shared lib.
+* Add some basic tests.
+* Contributors: Mike Purvis
+
 0.0.3 (2013-10-03)
 ------------------
 * Add sleep() call between poll and read to further reduce CPU use.
