@@ -33,8 +33,8 @@ static void _thread_func(ros::NodeHandle& n, int fd, std::string frame_id, uint3
 {
   ROS_DEBUG("New connection handler thread beginning.");
 
-  ros::Publisher pub = n.advertise<nmea_msgs::Sentence>("rx", 5);
-  ros::Subscriber sub = n.subscribe<nmea_msgs::Sentence>("tx", 5, 
+  ros::Publisher pub = n.advertise<nmea_msgs::Sentence>("nmea_sentence", 5);
+  ros::Subscriber sub = n.subscribe<nmea_msgs::Sentence>("nmea_sentence_out", 5, 
                             boost::bind(tx_msg_callback, _1, fd) ); 
 
   struct pollfd pollfds[] = { { fd, POLLIN, 0 } };

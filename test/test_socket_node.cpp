@@ -25,8 +25,8 @@ class NMEASocketTest : public testing::Test
     {
       ros::init(g_argc, g_argv, "test_socket_node");
       n = new ros::NodeHandle();
-      tx = n->advertise<nmea_msgs::Sentence>("tx", 5);
-      rx = n->subscribe("rx", 1, &NMEASocketTest::_rx_callback, this);
+      tx = n->advertise<nmea_msgs::Sentence>("nmea_sentence_out", 5);
+      rx = n->subscribe("nmea_sentence", 1, &NMEASocketTest::_rx_callback, this);
     }
 
     void connect(int* sockfd)

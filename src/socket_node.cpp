@@ -64,8 +64,8 @@ int main(int argc, char **argv)
   // and tearing down the same connection repeatly. So having these topics
   // persistently available avoids issues with external Python-based nodes.
   // See: https://github.com/ros/ros_comm/issues/129
-  ros::Publisher dummy_pub = n.advertise<nmea_msgs::Sentence>("rx", 5);
-  ros::Subscriber dummy_sub = n.subscribe<nmea_msgs::Sentence>("tx", 5, msg_callback ); 
+  ros::Publisher dummy_pub = n.advertise<nmea_msgs::Sentence>("nmea_sentence", 5);
+  ros::Subscriber dummy_sub = n.subscribe<nmea_msgs::Sentence>("nmea_sentence_out", 5, msg_callback ); 
 
   // Now start listening for the clients, here 
   // process will go in sleep mode and will wait 
