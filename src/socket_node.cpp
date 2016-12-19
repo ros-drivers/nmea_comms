@@ -129,6 +129,8 @@ int main(int argc, char **argv)
     }
   }
 
+  rx_stop_all();
+
   close(listener_fd);
   return 0;
 }
