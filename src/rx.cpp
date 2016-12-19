@@ -235,5 +235,6 @@ void rx_stop_all()
 
 void rx_thread_start(ros::NodeHandle& n, int fd, std::string frame_id, uint32_t byte_time_ns)
 {
+  rx_prune_threads();
   rx_threads.push_back(new boost::thread(_thread_func, boost::ref(n), fd, frame_id, byte_time_ns));
 }
