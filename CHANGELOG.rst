@@ -2,8 +2,8 @@
 Changelog for package nmea_comms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.0 (2019-08-02)
+------------------
 * Fixed boost::thread_resource_error: Resource temporarily unavailable exception that was thrown using netcat to feed socket_node.cpp with NMEA sentences. (`#5 <https://github.com/ros-drivers/nmea_comms/issues/5>`_)
 * Contributors: Avio, Mike Purvis
 
